@@ -1,0 +1,173 @@
+-- Pure Clean Script - No External Functions
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+
+-- ตัวแปรสถานะ
+local flyEnabled = false
+local noclipEnabled = false
+local walkSpeed = 16
+local flySpeed = 50
+
+-- ป้องกัน Gui ซ้ำ
+if PlayerGui:FindFirstChild("SimpleControlGUI") then
+    PlayerGui.SimpleControlGUI:Destroy()
+end
+
+-- สร้าง ScreenGui
+local sg = Instance.new("ScreenGui")
+sg.Name = "SimpleControlGUI"
+sg.ResetOnSpawn = false
+sg.Parent = PlayerGui
+
+-- ปุ่มเปิด/ปิดเมนู (IY)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleBtn.Position = UDim2.new(0, 10, 0.3, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+toggleBtn.Text = "IY"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
+toggleBtn.TextSize = 20
+toggleBtn.Parent = sg
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(1, 0)
+btnCorner.Parent = toggleBtn
+
+-- หน้าต่างหลัก
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 260)
+frame.Position = UDim2.new(0.5, -110, 0.4, -130)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+frame.Visible = false
+frame.Parent = sg
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 10)
+frameCorner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.Text = "เมนูควบคุม"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 16
+title.BackgroundTransparency = 1
+title.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.Parent = frame
+
+-- ฟังก์ชันสร้างปุ่มง่ายๆ
+local function makeButton(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 190, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Parent = frame
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        callback(btn)
+    end)
+    return btn
+end
+
+-- ปุ่ม 1: บิน (Fly)
+local bg, bv
+makeButton("บิน (Fly): OFF", function(btn)
+    flyEnabled = not flyEnabled
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    
+    if flyEnabled then
+        btn.Text = "บิน (Fly): ON"
+        btn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+        
+        bg = Instance.new("BodyGyro")
+        bg.P = 9e4
+        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.CFrame = hrp.CFrame
+        bg.Parent = hrp
+        
+        bv = Instance.new("BodyVelocity")
+        bv.Velocity = Vector3.new(0, 0, 0)
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bv.Parent = hrp
+        
+        if hum then hum.PlatformStand = true end
+    else
+        btn.Text = "บิน (Fly): OFF"
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        
+        if bg then bg:Destroy() end
+        if bv then bv:Destroy() end
+        if hum then hum.PlatformStand = false end
+    end
+end)
+
+-- ปุ่ม 2: เดินทะลุ (Noclip)
+makeButton("เดินทะลุ (Noclip): OFF", function(btn)
+    noclipEnabled = not noclipEnabled
+    if noclipEnabled then
+        btn.Text = "เดินทะลุ (Noclip): ON"
+        btn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+    else
+        btn.Text = "เดินทะลุ (Noclip): OFF"
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    end
+end)
+
+-- ปุ่ม 3: วิ่งเร็ว (Speed 100)
+makeButton("สปีดวิ่ง 100", function(btn)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 100
+    end
+end)
+
+-- ปุ่ม 4: รีเซ็ตความเร็ว (Speed 16)
+makeButton("สปีดปกติ (16)", function(btn)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
+    end
+end)
+
+-- Loop การทำงาน
+RunService.Stepped:Connect(function()
+    if noclipEnabled and LocalPlayer.Character then
+        for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if flyEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if bg and bv and hum then
+            bg.CFrame = Camera.CFrame
+            if hum.MoveDirection.Magnitude > 0 then
+                bv.Velocity = Camera.CFrame.LookVector * flySpeed
+            else
+                bv.Velocity = Vector3.new(0,0,0)
+            end
+        end
+    end
+end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+end)
