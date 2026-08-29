@@ -1,0 +1,162 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 1. สร้าง ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CustomIYGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- 2. ปุ่มกลม IY สำหรับ เปิด-ปิด เมนู
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "IYToggleBtn"
+toggleBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleBtn.Position = UDim2.new(0.45, 0, 0.1, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 50)
+toggleBtn.Text = "IY"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 22
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Parent = screenGui
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(1, 0)
+btnCorner.Parent = toggleBtn
+
+-- 3. หน้าต่างหลัก (กรอบสีเข้ม ขอบมน)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 360) -- เพิ่มความสูงรองรับรูปภาพ
+mainFrame.Position = UDim2.new(0.5, -160, 0.25, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+mainFrame.BackgroundTransparency = 0.15
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 16)
+frameCorner.Parent = mainFrame
+
+local framePadding = Instance.new("UIPadding")
+framePadding.PaddingTop = UDim.new(0, 15)
+framePadding.PaddingLeft = UDim.new(0, 15)
+framePadding.PaddingRight = UDim.new(0, 15)
+framePadding.Parent = mainFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 10)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.Parent = mainFrame
+
+-- 👑 เครดิตชื่อผู้เขียน + รูปภาพประกอบ
+local authorLabel = Instance.new("TextLabel")
+authorLabel.Name = "AuthorLabel"
+authorLabel.Size = UDim2.new(1, 0, 0, 25)
+authorLabel.BackgroundTransparency = 1
+authorLabel.Text = "ผู้เขียน: ลูกแม่จร"
+authorLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+authorLabel.TextSize = 16
+authorLabel.Font = Enum.Font.SourceSansBold
+authorLabel.Parent = mainFrame
+
+-- 🖼️ กรอบใส่รูปภาพในเมนู (เปลี่ยน rbxassetid:// เป็น ID รูปของคุณได้)
+local profileImage = Instance.new("ImageLabel")
+profileImage.Name = "ProfileImage"
+profileImage.Size = UDim2.new(0, 70, 0, 70)
+profileImage.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+profileImage.Image = "rbxassetid://6031075931" -- ใส่ Decal/Image ID ตรงนี้
+profileImage.Parent = mainFrame
+
+local imgCorner = Instance.new("UICorner")
+imgCorner.CornerRadius = UDim.new(1, 0) -- ทำเป็นรูปวงกลม
+imgCorner.Parent = profileImage
+
+-- ฟังก์ชันสร้างปุ่มในเมนู
+local function createMenuButton(text, iconText, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    btn.BackgroundTransparency = 0.3
+    btn.Text = "  " .. iconText .. "  " .. text
+    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.TextSize = 15
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Parent = mainFrame
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- ========================================================
+-- 4. รายการปุ่มในเมนู
+-- ========================================================
+
+-- ปุ่ม 1: Spawn Galaxy Block
+createMenuButton("Spawn Galaxy Block", "⚡", function()
+    print("Spawn Galaxy Block สั่งทำงาน!")
+end)
+
+-- ปุ่ม 2: เสกบล็อกดิน/ดินน้ำมัน (พร้อมแปะภาพ Decal บนบล็อก)
+createMenuButton("เสกบล็อกดิน/ดินน้ำมัน", "🌱", function()
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local dirt = Instance.new("Part")
+        dirt.Name = "DirtBlock"
+        dirt.Size = Vector3.new(4, 4, 4)
+        dirt.Position = char.HumanoidRootPart.Position + (char.HumanoidRootPart.CFrame.LookVector * 6)
+        dirt.Material = Enum.Material.Grass
+        dirt.Color = Color3.fromRGB(110, 80, 55)
+        dirt.Anchored = true
+        dirt.Parent = workspace
+        
+        -- แปะรูปภาพบนหน้าบล็อก
+        local decal = Instance.new("Decal")
+        decal.Texture = "rbxassetid://6031075931" -- ใส่ ID รูปภาพที่ต้องการแปะบนบล็อก
+        decal.Face = Enum.NormalId.Front
+        decal.Parent = dirt
+    end
+end)
+
+-- ปุ่ม 3: ปิดมอนสเตอร์ (แก้แลค / Remove Mobs)
+local isNoMobs = false
+local mobBtn
+mobBtn = createMenuButton("ปิดมอนสเตอร์ (แก้แลค): OFF", "👾", function()
+    isNoMobs = not isNoMobs
+    if isNoMobs then
+        mobBtn.Text = "  👾  ปิดมอนสเตอร์ (แก้แลค): ON"
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:FindFirstChild("Humanoid") and not game.Players:GetPlayerFromCharacter(obj) then
+                obj:Destroy()
+            end
+        end
+    else
+        mobBtn.Text = "  👾  ปิดมอนสเตอร์ (แก้แลค): OFF"
+    end
+end)
+
+-- ปุ่ม 4: โหมดกาก (ลดความละเอียดภาพแก้แลค)
+local isLowGraphic = false
+local lowBtn
+lowBtn = createMenuButton("โหมดกาก (แก้แลค): OFF", "📉", function()
+    isLowGraphic = not isLowGraphic
+    if isLowGraphic then
+        lowBtn.Text = "  📉  โหมดกาก (แก้แลค): ON"
+        settings().Rendering.QualityLevel = 1
+    else
+        lowBtn.Text = "  📉  โหมดกาก (แก้แลค): OFF"
+        settings().Rendering.QualityLevel = 5
+    end
+end)
+
+-- ========================================================
+-- 5. ระบบกดปุ่ม IY เพื่อเปิด/ปิด เมนู
+-- ========================================================
+toggleBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
